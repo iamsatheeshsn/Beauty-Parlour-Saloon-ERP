@@ -1,8 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { cn } from '@/utils/cn'
 import { masterNavItems } from '@/config/masterConfigs'
+import { usePermission } from '@/hooks/usePermission'
 
 export function MastersLayout() {
+  const { hasPermission } = usePermission()
+  const visibleItems = masterNavItems.filter((item) => hasPermission(item.permission))
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row">
       <aside className="w-full shrink-0 lg:w-56">
@@ -11,7 +15,7 @@ export function MastersLayout() {
             Master Data
           </p>
           <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:block lg:space-y-0.5 lg:overflow-visible lg:pb-0">
-            {masterNavItems.map((item) => (
+            {visibleItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

@@ -42,10 +42,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await authService.login({ email, password })
-    setUser(response.data.user)
     setToken(response.data.token)
     localStorage.setItem(TOKEN_KEY, response.data.token)
-    localStorage.setItem(USER_KEY, JSON.stringify(response.data.user))
+
+    const me = await authService.me()
+    setUser(me.data)
+    localStorage.setItem(USER_KEY, JSON.stringify(me.data))
   }, [])
 
   const logout = useCallback(async () => {

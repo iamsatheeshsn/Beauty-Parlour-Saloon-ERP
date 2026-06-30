@@ -45,6 +45,8 @@ class AuthService
             request: $request
         );
 
+        $user->load('roles', 'permissions');
+
         return new AuthResponseDTO($user, $token);
     }
 

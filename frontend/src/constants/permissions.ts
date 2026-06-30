@@ -43,6 +43,9 @@ export const PERMISSION_GROUP_ORDER = [
   'website-inquiries',
   'homepage-slides',
   'testimonials',
+  'gallery-items',
+  'faqs',
+  'blog-posts',
 ] as const
 
 /** Higher-level groups aligned with sidebar navigation */
@@ -120,7 +123,7 @@ export const PERMISSION_SUPER_GROUPS = [
   {
     id: 'website',
     label: 'Website',
-    groups: ['website-inquiries', 'homepage-slides', 'testimonials'],
+    groups: ['website-inquiries', 'homepage-slides', 'testimonials', 'gallery-items', 'faqs', 'blog-posts'],
   },
   {
     id: 'system',
@@ -175,6 +178,9 @@ export const PERMISSION_GROUP_LABELS: Record<string, string> = {
   'website-inquiries': 'Website Inquiries',
   'homepage-slides': 'Homepage Slides',
   testimonials: 'Testimonials',
+  'gallery-items': 'Gallery',
+  faqs: 'FAQ',
+  'blog-posts': 'Journal',
 }
 
 export const PERMISSION_LABELS: Record<string, string> = {
@@ -298,6 +304,12 @@ export const PERMISSION_LABELS: Record<string, string> = {
   'homepage-slides.manage': 'Manage homepage slides',
   'testimonials.view': 'View testimonials',
   'testimonials.manage': 'Manage testimonials',
+  'gallery-items.view': 'View gallery',
+  'gallery-items.manage': 'Manage gallery',
+  'faqs.view': 'View FAQ',
+  'faqs.manage': 'Manage FAQ',
+  'blog-posts.view': 'View journal posts',
+  'blog-posts.manage': 'Manage journal posts',
 }
 
 export function permissionLabel(name: string): string {

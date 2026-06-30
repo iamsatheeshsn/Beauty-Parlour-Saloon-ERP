@@ -40,7 +40,10 @@ class UserResource extends JsonResource
             'last_login_at' => $this->last_login_at?->toIso8601String(),
             'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')),
             'role' => $this->whenLoaded('roles', fn () => $this->roles->first()?->name),
-            'permissions' => $this->whenLoaded('permissions', fn () => $this->getAllPermissions()->pluck('name')),
+            'permissions' => $this->when(
+                $this->relationLoaded('roles') || $this->relationLoaded('permissions'),
+                fn () => $this->getAllPermissions()->pluck('name')->values()
+            ),
             'branch' => $this->whenLoaded('branch', fn () => [
                 'id' => $this->branch?->id,
                 'name' => $this->branch?->name,

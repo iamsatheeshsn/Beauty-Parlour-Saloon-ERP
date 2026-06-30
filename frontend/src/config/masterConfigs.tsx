@@ -525,18 +525,18 @@ export const settingConfig: MasterModuleConfig = {
   modalSize: 'max-w-xl',
 }
 
-export const masterNavItems = [
-  { label: 'Company', to: '/masters/company' },
-  { label: 'Branches', to: '/masters/branches' },
-  { label: 'Departments', to: '/masters/departments' },
-  { label: 'Designations', to: '/masters/staff-designations' },
-  { label: 'Countries', to: '/masters/countries' },
-  { label: 'Emirates', to: '/masters/emirates' },
-  { label: 'Cities', to: '/masters/cities' },
-  { label: 'Expense Categories', to: '/masters/expense-categories' },
-  { label: 'Payment Methods', to: '/masters/payment-methods' },
-  { label: 'Service Categories', to: '/masters/service-categories' },
-  { label: 'Product Categories', to: '/masters/product-categories' },
-  { label: 'Brands', to: '/masters/brands' },
-  { label: 'Suppliers', to: '/masters/suppliers' },
+export const masterNavItems: Array<{ label: string; to: string; permission: string }> = [
+  { label: 'Company', to: '/masters/company', permission: 'company.view' },
+  { label: 'Branches', to: '/masters/branches', permission: 'branches.view' },
+  { label: 'Departments', to: '/masters/departments', permission: 'departments.view' },
+  { label: 'Designations', to: '/masters/staff-designations', permission: 'staff-designations.view' },
+  { label: 'Countries', to: '/masters/countries', permission: 'countries.view' },
+  { label: 'Emirates', to: '/masters/emirates', permission: 'emirates.view' },
+  { label: 'Cities', to: '/masters/cities', permission: 'cities.view' },
+  { label: 'Expense Categories', to: '/masters/expense-categories', permission: 'expense-categories.view' },
+  { label: 'Payment Methods', to: '/masters/payment-methods', permission: 'payment-methods.view' },
+  { label: 'Service Categories', to: '/masters/service-categories', permission: 'service-categories.view' },
+  { label: 'Product Categories', to: '/masters/product-categories', permission: 'product-categories.view' },
+  { label: 'Brands', to: '/masters/brands', permission: 'brands.view' },
+  { label: 'Suppliers', to: '/masters/suppliers', permission: 'suppliers.view' },
 ]

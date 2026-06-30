@@ -10,11 +10,14 @@ import { visibleNavGroups } from '@/constants/navigation'
 
 export function Sidebar() {
   const { collapsed, toggleCollapsed, mobileOpen, setMobileOpen } = useSidebar()
-  const { isAuthenticated } = useAuth()
-  const { hasPermission, hasAnyPermission } = usePermission()
+  const { isAuthenticated, isLoading } = useAuth()
+  const { hasPermission, hasAnyPermission, permissionsReady } = usePermission()
   const location = useLocation()
 
-  const groups = visibleNavGroups(isAuthenticated, hasPermission, hasAnyPermission)
+  const groups =
+    isAuthenticated && !isLoading && permissionsReady
+      ? visibleNavGroups(isAuthenticated, hasPermission, hasAnyPermission)
+      : []
 
   useEffect(() => {
     setMobileOpen(false)

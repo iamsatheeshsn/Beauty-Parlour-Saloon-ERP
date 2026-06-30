@@ -42,7 +42,7 @@ class UserResource extends JsonResource
             'role' => $this->whenLoaded('roles', fn () => $this->roles->first()?->name),
             'permissions' => $this->when(
                 $this->relationLoaded('roles') || $this->relationLoaded('permissions'),
-                fn () => $this->getAllPermissions()->pluck('name')->values()
+                fn () => $this->getAllPermissions()->pluck('name')->values()->all()
             ),
             'branch' => $this->whenLoaded('branch', fn () => [
                 'id' => $this->branch?->id,

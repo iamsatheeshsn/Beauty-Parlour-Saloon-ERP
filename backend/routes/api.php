@@ -69,7 +69,46 @@ $viewCrud = fn (string $resource) => [
     'destroy' => "permission:{$resource}.delete",
 ];
 
-Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
+/**
+ * Apply action-specific permission middleware to apiResource routes.
+ * Passing a keyed array to ->middleware() applies every entry to all actions.
+ */
+$applyResourcePermissions = function (string $uri, string $controller, array $middlewareByAction, array $resourceOptions = []) {
+    $registration = Route::apiResource($uri, $controller);
+
+    if (isset($resourceOptions['only'])) {
+        $registration->only($resourceOptions['only']);
+    }
+
+    if (isset($resourceOptions['except'])) {
+        $registration->except($resourceOptions['except']);
+    }
+
+    $grouped = [];
+    foreach ($middlewareByAction as $action => $middleware) {
+        $grouped[$middleware][] = $action;
+    }
+
+    foreach ($grouped as $middleware => $actions) {
+        $registration->middlewareFor($actions, $middleware);
+    }
+};
+
+$registerViewManage = fn (string $name, string $controller, array $options = []) => $applyResourcePermissions(
+    $name,
+    $controller,
+    $viewManage($name),
+    $options
+);
+
+$registerViewCrud = fn (string $name, string $controller, array $options = []) => $applyResourcePermissions(
+    $name,
+    $controller,
+    $viewCrud($name),
+    $options
+);
+
+Route::prefix('v1')->group(function () use ($applyResourcePermissions, $registerViewManage, $registerViewCrud): void {
     Route::prefix('public')->group(function (): void {
         Route::get('settings', [PublicWebsiteController::class, 'settings']);
         Route::get('services', [PublicWebsiteController::class, 'services']);
@@ -99,7 +138,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
         });
     });
 
-    Route::middleware('auth:sanctum')->group(function () use ($viewManage, $viewCrud): void {
+    Route::middleware('auth:sanctum')->group(function () use ($applyResourcePermissions, $registerViewManage, $registerViewCrud): void {
         Route::get('dashboard', [DashboardController::class, 'index'])
             ->middleware('permission:dashboard.view');
 
@@ -118,7 +157,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
         Route::get('permissions', [PermissionController::class, 'index'])
             ->middleware('permission:roles.view');
 
-        Route::apiResource('roles', RoleController::class)->middleware([
+        $applyResourcePermissions('roles', RoleController::class, [
             'index' => 'permission:roles.view',
             'show' => 'permission:roles.view',
             'store' => 'permission:roles.manage',
@@ -126,20 +165,20 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             'destroy' => 'permission:roles.manage',
         ]);
 
-        Route::apiResource('users', UserController::class)->middleware($viewCrud('users'));
+        $registerViewCrud('users', UserController::class);
 
         Route::get('activity-logs', [ActivityLogController::class, 'index'])
             ->middleware('permission:activity-logs.view');
 
-        Route::apiResource('countries', CountryController::class)->middleware($viewManage('countries'));
-        Route::apiResource('emirates', EmirateController::class)->middleware($viewManage('emirates'));
-        Route::apiResource('cities', CityController::class)->middleware($viewManage('cities'));
-        Route::apiResource('branches', BranchController::class)->middleware($viewCrud('branches'));
-        Route::apiResource('departments', DepartmentController::class)->middleware($viewManage('departments'));
-        Route::apiResource('staff-designations', StaffDesignationController::class)->middleware($viewManage('staff-designations'));
-        Route::apiResource('expense-categories', ExpenseCategoryController::class)->middleware($viewManage('expense-categories'));
-        Route::apiResource('payment-methods', PaymentMethodController::class)->middleware($viewManage('payment-methods'));
-        Route::apiResource('service-categories', ServiceCategoryController::class)->middleware($viewManage('service-categories'));
+        $registerViewManage('countries', CountryController::class);
+        $registerViewManage('emirates', EmirateController::class);
+        $registerViewManage('cities', CityController::class);
+        $registerViewCrud('branches', BranchController::class);
+        $registerViewManage('departments', DepartmentController::class);
+        $registerViewManage('staff-designations', StaffDesignationController::class);
+        $registerViewManage('expense-categories', ExpenseCategoryController::class);
+        $registerViewManage('payment-methods', PaymentMethodController::class);
+        $registerViewManage('service-categories', ServiceCategoryController::class);
 
         Route::get('services/stats', [SalonServiceController::class, 'stats'])
             ->middleware('permission:services.view');
@@ -147,7 +186,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             ->middleware('permission:services.update');
         Route::delete('services/{id}/image', [SalonServiceController::class, 'deleteImage'])
             ->middleware('permission:services.update');
-        Route::apiResource('services', SalonServiceController::class)->middleware($viewCrud('services'));
+        $registerViewCrud('services', SalonServiceController::class);
 
         Route::post('settings/app-logo', [SettingController::class, 'uploadLogo'])
             ->middleware('permission:settings.manage');
@@ -165,7 +204,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             ->middleware('permission:settings.manage');
         Route::delete('settings/page-banner/{key}', [SettingController::class, 'deletePageBanner'])
             ->middleware('permission:settings.manage');
-        Route::apiResource('settings', SettingController::class)->middleware([
+        $applyResourcePermissions('settings', SettingController::class, [
             'index' => 'permission:settings.view',
             'show' => 'permission:settings.view',
             'store' => 'permission:settings.manage',
@@ -177,17 +216,17 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             ->middleware('permission:website-inquiries.view');
         Route::patch('website-inquiries/{id}/status', [WebsiteInquiryController::class, 'updateStatus'])
             ->middleware('permission:website-inquiries.manage');
-        Route::apiResource('website-inquiries', WebsiteInquiryController::class)->only(['index', 'show', 'destroy'])->middleware([
+        $applyResourcePermissions('website-inquiries', WebsiteInquiryController::class, [
             'index' => 'permission:website-inquiries.view',
             'show' => 'permission:website-inquiries.view',
             'destroy' => 'permission:website-inquiries.manage',
-        ]);
+        ], ['only' => ['index', 'show', 'destroy']]);
 
         Route::post('homepage-slides/{id}/image', [HomepageSlideController::class, 'uploadImage'])
             ->middleware('permission:homepage-slides.manage');
         Route::delete('homepage-slides/{id}/image', [HomepageSlideController::class, 'deleteImage'])
             ->middleware('permission:homepage-slides.manage');
-        Route::apiResource('homepage-slides', HomepageSlideController::class)->middleware([
+        $applyResourcePermissions('homepage-slides', HomepageSlideController::class, [
             'index' => 'permission:homepage-slides.view',
             'show' => 'permission:homepage-slides.view',
             'store' => 'permission:homepage-slides.manage',
@@ -195,7 +234,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             'destroy' => 'permission:homepage-slides.manage',
         ]);
 
-        Route::apiResource('testimonials', TestimonialController::class)->middleware([
+        $applyResourcePermissions('testimonials', TestimonialController::class, [
             'index' => 'permission:testimonials.view',
             'show' => 'permission:testimonials.view',
             'store' => 'permission:testimonials.manage',
@@ -207,7 +246,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             ->middleware('permission:gallery-items.manage');
         Route::delete('gallery-items/{id}/image', [GalleryItemController::class, 'deleteImage'])
             ->middleware('permission:gallery-items.manage');
-        Route::apiResource('gallery-items', GalleryItemController::class)->middleware([
+        $applyResourcePermissions('gallery-items', GalleryItemController::class, [
             'index' => 'permission:gallery-items.view',
             'show' => 'permission:gallery-items.view',
             'store' => 'permission:gallery-items.manage',
@@ -215,7 +254,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             'destroy' => 'permission:gallery-items.manage',
         ]);
 
-        Route::apiResource('faqs', FaqController::class)->middleware([
+        $applyResourcePermissions('faqs', FaqController::class, [
             'index' => 'permission:faqs.view',
             'show' => 'permission:faqs.view',
             'store' => 'permission:faqs.manage',
@@ -227,7 +266,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             ->middleware('permission:blog-posts.manage');
         Route::delete('blog-posts/{id}/featured-image', [BlogPostController::class, 'deleteFeaturedImage'])
             ->middleware('permission:blog-posts.manage');
-        Route::apiResource('blog-posts', BlogPostController::class)->middleware([
+        $applyResourcePermissions('blog-posts', BlogPostController::class, [
             'index' => 'permission:blog-posts.view',
             'show' => 'permission:blog-posts.view',
             'store' => 'permission:blog-posts.manage',
@@ -243,7 +282,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             ->middleware('permission:customers.update');
         Route::delete('customers/{id}/photo', [CustomerController::class, 'deletePhoto'])
             ->middleware('permission:customers.update');
-        Route::apiResource('customers', CustomerController::class)->middleware($viewCrud('customers'));
+        $registerViewCrud('customers', CustomerController::class);
 
         Route::get('customers/{customerId}/notes', [CustomerNoteController::class, 'index'])
             ->middleware('permission:customer-notes.view');
@@ -271,7 +310,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             ->middleware('permission:staff.update');
         Route::delete('staff/{id}/avatar', [StaffController::class, 'deleteAvatar'])
             ->middleware('permission:staff.update');
-        Route::apiResource('staff', StaffController::class)->middleware($viewCrud('staff'));
+        $registerViewCrud('staff', StaffController::class);
 
         Route::get('staff/{userId}/documents', [StaffDocumentController::class, 'index'])
             ->middleware('permission:staff-documents.view');
@@ -384,9 +423,9 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
         Route::get('sales/{id}/receipt', [SaleController::class, 'receipt'])
             ->middleware('permission:sales.view');
 
-        Route::apiResource('product-categories', ProductCategoryController::class)->middleware($viewManage('product-categories'));
-        Route::apiResource('brands', BrandController::class)->middleware($viewManage('brands'));
-        Route::apiResource('suppliers', SupplierController::class)->middleware($viewManage('suppliers'));
+        $registerViewManage('product-categories', ProductCategoryController::class);
+        $registerViewManage('brands', BrandController::class);
+        $registerViewManage('suppliers', SupplierController::class);
 
         Route::get('products/stats', [ProductController::class, 'stats'])
             ->middleware('permission:products.view');
@@ -394,7 +433,7 @@ Route::prefix('v1')->group(function () use ($viewManage, $viewCrud): void {
             ->middleware('permission:products.update');
         Route::delete('products/{id}/image', [ProductController::class, 'deleteImage'])
             ->middleware('permission:products.update');
-        Route::apiResource('products', ProductController::class)->middleware($viewCrud('products'));
+        $registerViewCrud('products', ProductController::class);
 
         Route::get('inventory/stats', [InventoryController::class, 'stats'])
             ->middleware('permission:inventory.view');

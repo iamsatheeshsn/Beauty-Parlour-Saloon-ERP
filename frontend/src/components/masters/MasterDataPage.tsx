@@ -21,9 +21,17 @@ import {
 } from '@/components'
 import type { FormFieldConfig, MasterModuleConfig } from '@/config/masterModules'
 import { useDebounce } from '@/hooks/useDebounce'
+import { usePermission } from '@/hooks/usePermission'
 import type { ListParams, MasterRecord } from '@/services/masterService'
 import type { PaginatedResponse } from '@/types'
 import { isPaginated } from '@/utils/master'
+import {
+  canCreateMaster,
+  canDeleteMaster,
+  canUpdateMaster,
+  canViewMaster,
+} from '@/utils/masterPermissions'
+import { Navigate } from 'react-router-dom'
 
 interface MasterDataPageProps {
   config: MasterModuleConfig
@@ -32,7 +40,9 @@ interface MasterDataPageProps {
 function buildColumns(
   config: MasterModuleConfig,
   onEdit: (row: MasterRecord) => void,
-  onDelete: (row: MasterRecord) => void
+  onDelete: (row: MasterRecord) => void,
+  canUpdate: boolean,
+  canDelete: boolean,
 ): ColumnDef<MasterRecord, unknown>[] {
   const base =
     config.columns.length > 0
@@ -42,6 +52,10 @@ function buildColumns(
           { accessorKey: 'code', header: 'Code' },
         ] as ColumnDef<MasterRecord, unknown>[])
 
+  if (!canUpdate && !canDelete) {
+    return base
+  }
+
   return [
     ...base,
     {
@@ -49,18 +63,22 @@ function buildColumns(
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" onClick={() => onEdit(row.original)} title="Edit">
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(row.original)}
-            title="Delete"
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {canUpdate && (
+            <Button variant="ghost" size="icon" onClick={() => onEdit(row.original)} title="Edit">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          {canDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(row.original)}
+              title="Delete"
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       ),
     },
@@ -69,6 +87,12 @@ function buildColumns(
 
 export function MasterDataPage({ config }: MasterDataPageProps) {
   const queryClient = useQueryClient()
+  const { hasPermission } = usePermission()
+  const canView = canViewMaster(config.permissions, hasPermission)
+  const canCreate = canCreateMaster(config.permissions, hasPermission)
+  const canUpdate = canUpdateMaster(config.permissions, hasPermission)
+  const canDelete = canDeleteMaster(config.permissions, hasPermission)
+
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
@@ -225,14 +249,18 @@ export function MasterDataPage({ config }: MasterDataPageProps) {
   }
 
   const columns = useMemo(
-    () => buildColumns(config, openEdit, setDeleteTarget),
+    () => buildColumns(config, openEdit, setDeleteTarget, canUpdate, canDelete),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [config.key]
+    [config.key, canUpdate, canDelete]
   )
 
   useEffect(() => {
     setPage(1)
   }, [debouncedSearch])
+
+  if (!canView) {
+    return <Navigate to="/masters" replace />
+  }
 
   if (isLoading && !data) {
     return <PageLoader />
@@ -247,7 +275,7 @@ export function MasterDataPage({ config }: MasterDataPageProps) {
           <h1 className="font-serif text-3xl font-semibold text-foreground">{config.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{config.subtitle}</p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} disabled={!canCreate}>
           <Plus className="h-4 w-4" />
           Add New
         </Button>

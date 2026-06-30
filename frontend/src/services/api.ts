@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
-import { API_BASE_URL, TOKEN_KEY } from '@/constants/app'
+import { API_BASE_URL, TOKEN_KEY, USER_KEY } from '@/constants/app'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -28,7 +28,7 @@ api.interceptors.response.use(
   (error: AxiosError<{ message?: string }>) => {
     if (error.response?.status === 401) {
       localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem('beauty_salon_user')
+      localStorage.removeItem(USER_KEY)
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login'
       }

@@ -2,19 +2,40 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { AuthContext, type AuthContextType } from './AuthContext'
 import { authService } from '@/services/authService'
 import { TOKEN_KEY, USER_KEY } from '@/constants/app'
+import { normalizePermissions } from '@/utils/permissions'
 import type { User } from '@/types'
 
 interface AuthProviderProps {
   children: ReactNode
 }
 
+function normalizeUser(user: User): User {
+  return {
+    ...user,
+    permissions: normalizePermissions(user.permissions),
+    roles: Array.isArray(user.roles) ? user.roles : user.roles ? [String(user.roles)] : [],
+  }
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(() => {
     const stored = localStorage.getItem(USER_KEY)
-    return stored ? JSON.parse(stored) : null
+    if (!stored) return null
+    try {
+      return normalizeUser(JSON.parse(stored) as User)
+    } catch {
+      return null
+    }
   })
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY))
   const [isLoading, setIsLoading] = useState(true)
+
+  const persistUser = useCallback((next: User) => {
+    const normalized = normalizeUser(next)
+    setUser(normalized)
+    localStorage.setItem(USER_KEY, JSON.stringify(normalized))
+    return normalized
+  }, [])
 
   const refreshUser = useCallback(async () => {
     if (!localStorage.getItem(TOKEN_KEY)) {
@@ -24,8 +45,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       const response = await authService.me()
-      setUser(response.data)
-      localStorage.setItem(USER_KEY, JSON.stringify(response.data))
+      persistUser(response.data)
     } catch {
       setUser(null)
       setToken(null)
@@ -34,21 +54,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [persistUser])
 
   useEffect(() => {
     refreshUser()
   }, [refreshUser])
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await authService.login({ email, password })
-    setToken(response.data.token)
-    localStorage.setItem(TOKEN_KEY, response.data.token)
+    setIsLoading(true)
+    setUser(null)
+    localStorage.removeItem(USER_KEY)
 
-    const me = await authService.me()
-    setUser(me.data)
-    localStorage.setItem(USER_KEY, JSON.stringify(me.data))
-  }, [])
+    try {
+      const response = await authService.login({ email, password })
+      setToken(response.data.token)
+      localStorage.setItem(TOKEN_KEY, response.data.token)
+
+      const me = await authService.me()
+      persistUser(me.data)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [persistUser])
 
   const logout = useCallback(async () => {
     try {

@@ -91,6 +91,7 @@ class RoleService
 
         if (is_array($permissions)) {
             $role->syncPermissions($permissions);
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
         }
 
         $role->load('permissions');

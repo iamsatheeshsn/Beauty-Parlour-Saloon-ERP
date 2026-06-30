@@ -1,9 +1,16 @@
+import { useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { normalizePermissions } from '@/utils/permissions'
 
 export function usePermission() {
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
 
-  const permissions = user?.permissions ?? []
+  const permissions = useMemo(
+    () => normalizePermissions(user?.permissions),
+    [user?.permissions],
+  )
+
+  const permissionsReady = !isLoading && user != null && user.permissions !== undefined
 
   const hasPermission = (permission: string) => permissions.includes(permission)
 
@@ -11,5 +18,5 @@ export function usePermission() {
 
   const hasAllPermissions = (perms: string[]) => perms.every((p) => permissions.includes(p))
 
-  return { permissions, hasPermission, hasAnyPermission, hasAllPermissions }
+  return { permissions, permissionsReady, hasPermission, hasAnyPermission, hasAllPermissions }
 }

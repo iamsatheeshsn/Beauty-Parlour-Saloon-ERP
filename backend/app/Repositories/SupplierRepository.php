@@ -21,6 +21,11 @@ class SupplierRepository extends BaseMasterRepository
         return true;
     }
 
+    protected function defaultOrder(): array
+    {
+        return ['name' => 'asc'];
+    }
+
     public function nextCode(int $companyId): string
     {
         $latest = Supplier::query()

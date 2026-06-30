@@ -37,7 +37,7 @@ function matricesEqual(a: string[], b: string[]): boolean {
 
 export default function PermissionsMatrixPage() {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { hasPermission } = usePermission()
   const canManage = hasPermission('roles.manage')
   const isOwner = user?.roles?.includes('owner')
@@ -105,13 +105,23 @@ export default function PermissionsMatrixPage() {
       await Promise.all(
         roleIds.map((id) => roleService.update(id, { permissions: matrix[id] ?? [] }))
       )
+      return roleIds
     },
-    onSuccess: () => {
+    onSuccess: async (savedRoleIds) => {
       queryClient.invalidateQueries({ queryKey: ['roles'] })
       setBaseline({ ...matrix })
       setSaveSuccess(true)
       setSaveError(null)
       setTimeout(() => setSaveSuccess(false), 3000)
+
+      const currentUserRoleIds =
+        roles
+          ?.filter((role) => user?.roles?.includes(role.name))
+          .map((role) => role.id) ?? []
+
+      if (savedRoleIds.some((id) => currentUserRoleIds.includes(id))) {
+        await refreshUser()
+      }
     },
     onError: (err: unknown) => {
       setSaveError(extractError(err))

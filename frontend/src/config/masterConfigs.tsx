@@ -33,6 +33,7 @@ export const countryConfig: MasterModuleConfig = {
   key: 'countries',
   title: 'Countries',
   subtitle: 'Manage country master data',
+  permissions: { view: 'countries.view', manage: 'countries.manage' },
   endpoint: '/countries',
   queryKey: 'countries',
   service: countryService,
@@ -58,6 +59,7 @@ export const emirateConfig: MasterModuleConfig = {
   key: 'emirates',
   title: 'Emirates',
   subtitle: 'Manage UAE emirates and regions',
+  permissions: { view: 'emirates.view', manage: 'emirates.manage' },
   endpoint: '/emirates',
   queryKey: 'emirates',
   service: emirateService,
@@ -99,6 +101,7 @@ export const cityConfig: MasterModuleConfig = {
   key: 'cities',
   title: 'Cities',
   subtitle: 'Manage cities by emirate',
+  permissions: { view: 'cities.view', manage: 'cities.manage' },
   endpoint: '/cities',
   queryKey: 'cities',
   service: cityService,
@@ -149,6 +152,12 @@ export const branchConfig: MasterModuleConfig = {
   key: 'branches',
   title: 'Branches',
   subtitle: 'Manage salon branches and locations',
+  permissions: {
+    view: 'branches.view',
+    create: 'branches.create',
+    update: 'branches.update',
+    delete: 'branches.delete',
+  },
   endpoint: '/branches',
   queryKey: 'branches',
   service: branchService,
@@ -215,6 +224,7 @@ export const departmentConfig: MasterModuleConfig = {
   key: 'departments',
   title: 'Departments',
   subtitle: 'Organize staff by department',
+  permissions: { view: 'departments.view', manage: 'departments.manage' },
   endpoint: '/departments',
   queryKey: 'departments',
   service: departmentService,
@@ -236,7 +246,9 @@ export const departmentConfig: MasterModuleConfig = {
 export const staffDesignationConfig: MasterModuleConfig = {
   key: 'staff-designations',
   title: 'Staff Designations',
+  navLabel: 'Designations',
   subtitle: 'Job titles and hierarchy levels',
+  permissions: { view: 'staff-designations.view', manage: 'staff-designations.manage' },
   endpoint: '/staff-designations',
   queryKey: 'staff-designations',
   service: staffDesignationService,
@@ -278,6 +290,7 @@ export const expenseCategoryConfig: MasterModuleConfig = {
   key: 'expense-categories',
   title: 'Expense Categories',
   subtitle: 'Classify business expenses',
+  permissions: { view: 'expense-categories.view', manage: 'expense-categories.manage' },
   endpoint: '/expense-categories',
   queryKey: 'expense-categories',
   service: expenseCategoryService,
@@ -316,6 +329,7 @@ export const paymentMethodConfig: MasterModuleConfig = {
   key: 'payment-methods',
   title: 'Payment Methods',
   subtitle: 'Accepted payment types',
+  permissions: { view: 'payment-methods.view', manage: 'payment-methods.manage' },
   endpoint: '/payment-methods',
   queryKey: 'payment-methods',
   service: paymentMethodService,
@@ -356,6 +370,7 @@ export const serviceCategoryConfig: MasterModuleConfig = {
   key: 'service-categories',
   title: 'Service Categories',
   subtitle: 'Group salon services',
+  permissions: { view: 'service-categories.view', manage: 'service-categories.manage' },
   endpoint: '/service-categories',
   queryKey: 'service-categories',
   service: serviceCategoryService,
@@ -392,6 +407,7 @@ export const productCategoryConfig: MasterModuleConfig = {
   key: 'product-categories',
   title: 'Product Categories',
   subtitle: 'Group inventory products',
+  permissions: { view: 'product-categories.view', manage: 'product-categories.manage' },
   endpoint: '/product-categories',
   queryKey: 'product-categories',
   service: productCategoryService,
@@ -425,6 +441,7 @@ export const brandConfig: MasterModuleConfig = {
   key: 'brands',
   title: 'Brands',
   subtitle: 'Product brand master data',
+  permissions: { view: 'brands.view', manage: 'brands.manage' },
   endpoint: '/brands',
   queryKey: 'brands',
   service: brandService,
@@ -453,6 +470,7 @@ export const supplierConfig: MasterModuleConfig = {
   key: 'suppliers',
   title: 'Suppliers',
   subtitle: 'Manage product suppliers',
+  permissions: { view: 'suppliers.view', manage: 'suppliers.manage' },
   endpoint: '/suppliers',
   queryKey: 'suppliers',
   service: supplierService,
@@ -483,6 +501,7 @@ export const settingConfig: MasterModuleConfig = {
   key: 'settings',
   title: 'Settings',
   subtitle: 'Application and company settings',
+  permissions: { view: 'settings.view', manage: 'settings.manage' },
   endpoint: '/settings',
   queryKey: 'settings',
   service: settingService,
@@ -525,18 +544,42 @@ export const settingConfig: MasterModuleConfig = {
   modalSize: 'max-w-xl',
 }
 
-export const masterNavItems: Array<{ label: string; to: string; permission: string }> = [
-  { label: 'Company', to: '/masters/company', permission: 'company.view' },
-  { label: 'Branches', to: '/masters/branches', permission: 'branches.view' },
-  { label: 'Departments', to: '/masters/departments', permission: 'departments.view' },
-  { label: 'Designations', to: '/masters/staff-designations', permission: 'staff-designations.view' },
-  { label: 'Countries', to: '/masters/countries', permission: 'countries.view' },
-  { label: 'Emirates', to: '/masters/emirates', permission: 'emirates.view' },
-  { label: 'Cities', to: '/masters/cities', permission: 'cities.view' },
-  { label: 'Expense Categories', to: '/masters/expense-categories', permission: 'expense-categories.view' },
-  { label: 'Payment Methods', to: '/masters/payment-methods', permission: 'payment-methods.view' },
-  { label: 'Service Categories', to: '/masters/service-categories', permission: 'service-categories.view' },
-  { label: 'Product Categories', to: '/masters/product-categories', permission: 'product-categories.view' },
-  { label: 'Brands', to: '/masters/brands', permission: 'brands.view' },
-  { label: 'Suppliers', to: '/masters/suppliers', permission: 'suppliers.view' },
+export const companyMasterEntry = {
+  key: 'company',
+  navLabel: 'Company',
+  to: '/masters/company',
+  permissions: { view: 'company.view', manage: 'company.manage' },
+} as const
+
+/** Master modules shown under /masters/:module — order matches sidebar. */
+export const masterModuleRegistry: MasterModuleConfig[] = [
+  branchConfig,
+  departmentConfig,
+  staffDesignationConfig,
+  countryConfig,
+  emirateConfig,
+  cityConfig,
+  expenseCategoryConfig,
+  paymentMethodConfig,
+  serviceCategoryConfig,
+  productCategoryConfig,
+  brandConfig,
+  supplierConfig,
+]
+
+export const masterModuleMap: Record<string, MasterModuleConfig> = Object.fromEntries(
+  masterModuleRegistry.map((config) => [config.key, config]),
+)
+
+export const masterNavItems = [
+  {
+    label: companyMasterEntry.navLabel,
+    to: companyMasterEntry.to,
+    permission: companyMasterEntry.permissions.view,
+  },
+  ...masterModuleRegistry.map((config) => ({
+    label: config.navLabel ?? config.title,
+    to: `/masters/${config.key}`,
+    permission: config.permissions.view,
+  })),
 ]

@@ -143,7 +143,7 @@ export function isNavItemVisible(
   if (!isAuthenticated) return false
   if (item.anyPermissions?.length) return hasAnyPermission(item.anyPermissions)
   if (item.permission) return hasPermission(item.permission)
-  return true
+  return false
 }
 
 export function visibleNavGroups(

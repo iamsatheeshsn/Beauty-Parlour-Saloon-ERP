@@ -25,10 +25,22 @@ export interface FormFieldConfig {
   defaultValue?: string | number | boolean
 }
 
+/** Matches backend: most masters use .view + .manage; branches uses full CRUD. */
+export interface MasterModulePermissions {
+  view: string
+  manage?: string
+  create?: string
+  update?: string
+  delete?: string
+}
+
 export interface MasterModuleConfig {
   key: string
+  /** Sidebar label (defaults to title when omitted) */
+  navLabel?: string
   title: string
   subtitle: string
+  permissions: MasterModulePermissions
   endpoint: string
   queryKey: string
   service: {

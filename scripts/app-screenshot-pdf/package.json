@@ -1,0 +1,13 @@
+{
+  "name": "app-screenshot-pdf",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capture": "node capture.mjs",
+    "pdf": "python build-pdf.py",
+    "all": "node capture.mjs && python build-pdf.py"
+  },
+  "devDependencies": {
+    "playwright": "^1.52.0"
+  }
+}
